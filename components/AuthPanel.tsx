@@ -8,8 +8,8 @@ import {
 	TextInput,
 	View,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { supabase } from "../lib/supabase";
+import IconoOjo from "./IconoOjo";
 
 /* Paleta muestreada de los sprites del marco para que todo sea el mismo mundo */
 export const INK = "#1e1e14"; // el contorno que comparten todos los assets
@@ -80,9 +80,7 @@ export default function AuthPanel() {
 		}
 	};
 
-	/* Vacías a propósito: se cablean cuando sumemos esos proveedores */
-	const handleGoogle = () => {};
-	const handleGithub = () => {};
+	/* Vacía a propósito: el recupero de contraseña se cablea más adelante */
 	const handleForgotPassword = () => {};
 
 	return (
@@ -159,7 +157,7 @@ export default function AuthPanel() {
 					lit={focused === "password"}
 					onFocus={() => setFocused("password")}
 					onBlur={() => setFocused(null)}
-					secureTextEntry
+					secure
 					autoComplete={isLogin ? "current-password" : "new-password"}
 				/>
 			</View>
@@ -222,39 +220,6 @@ export default function AuthPanel() {
 					loading={submitting}
 				/>
 			</View>
-
-			{/* Separador */}
-			<View
-				className="flex-row items-center"
-				style={{ gap: 10, marginTop: 26 }}
-			>
-				<View style={{ flex: 1, height: 2, backgroundColor: STEEL }} />
-				<Text
-					style={{
-						fontFamily: MONO,
-						fontSize: 11,
-						letterSpacing: 1.5,
-						color: DIM,
-					}}
-				>
-					O CONTINUAR CON
-				</Text>
-				<View style={{ flex: 1, height: 2, backgroundColor: STEEL }} />
-			</View>
-
-			{/* Apilados y a ancho completo: entran cómodos aunque el marco sea angosto */}
-			<View style={{ gap: 10, marginTop: 18 }}>
-				<ProviderButton
-					label="GOOGLE"
-					mark={<GoogleMark />}
-					onPress={handleGoogle}
-				/>
-				<ProviderButton
-					label="GITHUB"
-					mark={<GithubMark />}
-					onPress={handleGithub}
-				/>
-			</View>
 		</ScrollView>
 	);
 }
@@ -309,11 +274,16 @@ function ModeKey({
 function Field({
 	label,
 	lit,
+	secure,
 	...input
 }: {
 	label: string;
 	lit: boolean;
+	/* Nace tapado y suma el ojo para poder destaparlo */
+	secure?: boolean;
 } & React.ComponentProps<typeof TextInput>) {
+	const [revelado, setRevelado] = useState(false);
+
 	return (
 		<View>
 			<View
@@ -340,23 +310,51 @@ function Field({
 					{label}
 				</Text>
 			</View>
-			<TextInput
-				{...input}
-				autoCapitalize="none"
-				autoCorrect={false}
-				placeholderTextColor={DIM}
-				selectionColor={SKY}
-				style={{
-					fontFamily: MONO,
-					fontSize: 16,
-					color: SKY,
-					backgroundColor: READOUT,
-					borderWidth: 2,
-					borderColor: lit ? SKY : INK,
-					paddingHorizontal: 12,
-					paddingVertical: 13,
-				}}
-			/>
+			<View>
+				<TextInput
+					{...input}
+					secureTextEntry={secure && !revelado}
+					autoCapitalize="none"
+					autoCorrect={false}
+					placeholderTextColor={DIM}
+					selectionColor={SKY}
+					style={{
+						fontFamily: MONO,
+						fontSize: 16,
+						color: SKY,
+						backgroundColor: READOUT,
+						borderWidth: 2,
+						borderColor: lit ? SKY : INK,
+						paddingHorizontal: 12,
+						paddingVertical: 13,
+						/* Le deja el lugar al ojo para que el texto no se le meta debajo */
+						paddingRight: secure ? 48 : 12,
+					}}
+				/>
+
+				{secure ? (
+					<Pressable
+						onPress={() => setRevelado((v) => !v)}
+						accessibilityRole="button"
+						accessibilityLabel={
+							revelado ? "Ocultar contraseña" : "Mostrar contraseña"
+						}
+						accessibilityState={{ selected: revelado }}
+						/* Toma todo el alto del pozo: así es fácil de acertar con el pulgar */
+						style={{
+							position: "absolute",
+							right: 2,
+							top: 2,
+							bottom: 2,
+							width: 44,
+							alignItems: "center",
+							justifyContent: "center",
+						}}
+					>
+						<IconoOjo abierto={revelado} color={revelado ? SKY : DIM} />
+					</Pressable>
+				) : null}
+			</View>
 		</View>
 	);
 }
@@ -413,98 +411,5 @@ function PixelButton({
 				{label}
 			</Text>
 		</Pressable>
-	);
-}
-
-/* Botón de proveedor externo: ancho completo, con la marca en una ficha cuadrada */
-function ProviderButton({
-	label,
-	mark,
-	onPress,
-}: {
-	label: string;
-	mark: React.ReactNode;
-	onPress: () => void;
-}) {
-	const [pressed, setPressed] = useState(false);
-
-	return (
-		<Pressable
-			onPress={onPress}
-			onPressIn={() => setPressed(true)}
-			onPressOut={() => setPressed(false)}
-			accessibilityRole="button"
-			accessibilityLabel={`Continuar con ${label}`}
-			style={{
-				flexDirection: "row",
-				alignItems: "center",
-				justifyContent: "center",
-				gap: 12,
-				paddingVertical: 14,
-				backgroundColor: pressed ? shade(BONE, 0.82) : BONE,
-				borderWidth: 2,
-				borderColor: INK,
-				borderBottomWidth: pressed ? 2 : 5,
-				marginTop: pressed ? 3 : 0,
-			}}
-		>
-			<View
-				style={{
-					width: 26,
-					height: 26,
-					alignItems: "center",
-					justifyContent: "center",
-				}}
-			>
-				{mark}
-			</View>
-			<Text
-				style={{
-					fontFamily: MONO,
-					fontSize: 14,
-					letterSpacing: 1.5,
-					color: INK,
-				}}
-			>
-				{label}
-			</Text>
-		</Pressable>
-	);
-}
-
-/* Marcas oficiales dibujadas por vector, así no dependemos de assets externos */
-function GoogleMark() {
-	return (
-		<Svg width={20} height={20} viewBox="0 0 48 48">
-			<Path
-				fill="#4285F4"
-				d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"
-			/>
-			<Path
-				fill="#34A853"
-				d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"
-			/>
-			<Path
-				fill="#FBBC05"
-				d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"
-			/>
-			<Path
-				fill="#EA4335"
-				d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"
-			/>
-		</Svg>
-	);
-}
-
-function GithubMark() {
-	return (
-		<Svg width={22} height={22} viewBox="0 0 16 16">
-			<Path
-				fill={INK}
-				fillRule="evenodd"
-				clipRule="evenodd"
-				d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"
-			/>
-		</Svg>
 	);
 }

@@ -76,7 +76,7 @@ function SpideyHead() {
 /* El marco es el contenedor permanente de la app: los children ocupan el hueco del mapa */
 export default function TrackerFrame({ children }: PropsWithChildren) {
 	return (
-		<View className="flex-1 bg-black px-2 py-20">
+		<View className="flex-1 bg-black px-0 py-14">
 			{/* Grilla para el marco */}
 			<View className="flex-1">
 				{/* Fila 1 - borde superior */}
