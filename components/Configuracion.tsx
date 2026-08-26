@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import AvisoLegal from "./AvisoLegal";
 import IconoOjo from "./IconoOjo";
 import PanelCabecera from "./PanelCabecera";
 
@@ -41,6 +42,7 @@ export default function Configuracion({ visible, onClose }: Props) {
 	const email = session?.user?.email;
 
 	const [formAbierto, setFormAbierto] = useState(false);
+	const [avisoAbierto, setAvisoAbierto] = useState(false);
 	const [actual, setActual] = useState("");
 	const [nueva, setNueva] = useState("");
 	const [repetida, setRepetida] = useState("");
@@ -79,6 +81,7 @@ export default function Configuracion({ visible, onClose }: Props) {
 		if (visible) return;
 
 		setFormAbierto(false);
+		setAvisoAbierto(false);
 		setActual("");
 		setNueva("");
 		setRepetida("");
@@ -265,7 +268,20 @@ export default function Configuracion({ visible, onClose }: Props) {
 						onPress={() => setFormAbierto(true)}
 					/>
 				)}
+
+				{/* El aviso del arranque se acepta una sola vez: acá queda para releerlo */}
+				<Boton
+					label="VER AVISO LEGAL"
+					fondo={STEEL}
+					onPress={() => setAvisoAbierto(true)}
+				/>
 			</ScrollView>
+
+			<AvisoLegal
+				visible={avisoAbierto}
+				onClose={() => setAvisoAbierto(false)}
+				soloLectura
+			/>
 		</View>
 	);
 }
